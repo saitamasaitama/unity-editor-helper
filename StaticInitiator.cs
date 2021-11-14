@@ -1,30 +1,18 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
-using System.Text;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
 
-
-
-public partial class StaticInitiator
+public class StaticInitiator
 {
-  static StaticInitiator()
-  {
-        
-        
-  }
-  
   [MenuItem("GameObject/NodeInfo", false, 0)]
   public static void Foo()
   {
     var gameObject = Selection.activeGameObject;
-    UnityEngine.Debug.Log($@"
+    Debug.Log($@"
             CHILD={gameObject.transform.GetComponentsInChildren<Transform>().Length}
             ");
   }
@@ -36,16 +24,13 @@ public partial class StaticInitiator
     /**
      * 選択したファイルがcsファイルのときのみ起動
      */
-    string selectedPath = AssetDatabase.GetAssetPath(Selection.activeObject);
+    var selectedPath = AssetDatabase.GetAssetPath(Selection.activeObject);
     if (Regex.IsMatch(selectedPath, "\\.cs$"))
     {
-      string dir = Path.GetDirectoryName(selectedPath);
-      string basename = Path.GetFileNameWithoutExtension(selectedPath);
-      if (!Directory.Exists($"{dir}\\Editor"))
-      {
-        AssetDatabase.CreateFolder(dir, $"Editor");
-      }
-      var source = new CSSource()
+      var dir = Path.GetDirectoryName(selectedPath);
+      var basename = Path.GetFileNameWithoutExtension(selectedPath);
+      if (!Directory.Exists($"{dir}\\Editor")) AssetDatabase.CreateFolder(dir, "Editor");
+      var source = new CSSource
       {
         className = basename
       };
@@ -57,9 +42,8 @@ public partial class StaticInitiator
     }
     else
     {
-      UnityEngine.Debug.LogError($"Not CS File {selectedPath}");
+      Debug.LogError($"Not CS File {selectedPath}");
     }
-
   }
 
 
@@ -70,12 +54,12 @@ public partial class StaticInitiator
   [MenuItem("Assets/Open Git Bash", priority = 2, validate = false)]
   public static void BashOpenMenu()
   {
-    string selectedPath = AssetDatabase.GetAssetPath(Selection.activeObject);
-    string dir = Path.GetDirectoryName(selectedPath);
+    var selectedPath = AssetDatabase.GetAssetPath(Selection.activeObject);
+    var dir = Path.GetDirectoryName(selectedPath);
 
     var procInfo = new ProcessStartInfo();
     procInfo.UseShellExecute = true;
-    procInfo.FileName="C:\\Program Files\\Git\\git-bash.exe";
+    procInfo.FileName = "C:\\Program Files\\Git\\git-bash.exe";
     procInfo.WorkingDirectory = dir;
 
     Process.Start(procInfo);
@@ -84,7 +68,6 @@ public partial class StaticInitiator
 #endif
 
 #if UNITY_STANDALONE_OSX
-
   [MenuItem("Assets/Open Terminal", priority = 3, validate = false)]
   public static void BashOpenMenu()
   {
@@ -115,24 +98,24 @@ public partial class StaticInitiator
 
   private struct CSSource
   {
-
     public string className;
 
 
-    public override string ToString() =>
-$@"using System.Collections;
+    public override string ToString()
+    {
+      return $@"using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof({this.className}))]
-public class {this.className}Editor:Editor
+[CustomEditor(typeof({className}))]
+public class {className}Editor:Editor
 {{
 
   public override void OnInspectorGUI()
   {{
 
-    {this.className} target = this.target as {this.className};
+    {className} target = this.target as {className};
     base.OnInspectorGUI();
     if (GUILayout.Button(""Button""))
     {{
@@ -142,7 +125,6 @@ public class {this.className}Editor:Editor
   }}  
 }}
 ";
+    }
   }
-
-
 }
